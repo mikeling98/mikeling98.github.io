@@ -1,4 +1,4 @@
-const webhookURL = "https://script.google.com/macros/s/AKfycbwSyK_EE1daQcWJSnW3So4ezYuBJXSsyyF_7DYxIr94LCY5vhw30vAGDA-sPKjgnqv7/exec";
+const webhookURL = "https://script.google.com/macros/s/AKfycbye-4Y-BORY6QUEV4AnX4-vYHm0rGluuZfHITFH-CXPX4GY7jN1apbieTFTu57fIG9D/exec";
 const statusElement = document.getElementById("status");
 
 // Function to send location to webhook
