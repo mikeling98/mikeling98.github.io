@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Introduction Page - Little Excel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f8e1ff, #d4c1ec);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        /* Navigation Menu */
+        nav {
+            background-color: rgba(60, 37, 106, 0.6);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: #e0d1ff;
+        }
+        /* Main Container */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Headline & Paragraph */
+        .container h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #3c256a;
+        }
+        .container p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container a {
+            color: #3c256a;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .container a:hover {
+            text-decoration: underline;
+        }
+        /* Contact Section */
+        .contact {
+            margin-top: 30px;
+        }
+        .contact h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #3c256a;
+        }
+        .contact ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .contact li {
+            margin: 10px 0;
+        }
+        .contact a {
+            color: rgba(60, 37, 106, 1);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+        .contact a:hover {
+            color: rgba(60, 37, 106, 0.8);
+            text-decoration: underline;
+        }
+        /* Footer */
+        footer {
+            background-color: rgba(60, 37, 106, 0.6);
+            color: #fff;
+            text-align: center;
+            padding: 15px 0;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation Menu -->
+<nav>
+    <a href="https://www.facebook.com/little.excel">Fanpage</a>
+    <a href="https://www.youtube.com/@reallilexcel">Youtube</a>
+    <a href="https://www.tiktok.com/@lil.excel">Tiktok</a>
+    <a href="https://www.facebook.com/groups/little.excel/">Group</a>
+</nav>
+
+<!-- Main Content -->
+<div class="container">
+    <h1>Bạn có câu hỏi liên quan đến tin học văn phòng?</h1>
+    <p>
+        Với nhiều năm kinh nghiệm làm việc, giảng dạy và hỗ trợ cộng đồng,
+        <a href="https://www.facebook.com/little.excel">Little Excel</a> mang đến cho bạn các giải pháp về tin học văn phòng Word, Excel, Powerpoint, Google Sheets,
+        cũng như các giải pháp tự động hoá với n8n, UIPath và nhiều ứng dụng hữu ích khác.
+    </p>
+    <div class="contact">
+        <h2>Thông tin liên hệ</h2>
+        <ul>
+            <li><a href="mailto:minhlai.forwork@gmail.com">minhlai.forwork@gmail.com</a></li>
+            <li><a href="https://www.facebook.com/little.excel">Fanpage Facebook</a></li>
+            <li><a href="https://www.youtube.com/@reallilexcel">Kênh Youtube</a></li>
+            <li><a href="https://www.tiktok.com/@lil.excel">Kênh Tiktok</a></li>
+            <li><a href="https://www.facebook.com/groups/little.excel/">Group Facebook</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <p>© 2025 excelogy.net</p>
+</footer>
+</body>
+</html>
