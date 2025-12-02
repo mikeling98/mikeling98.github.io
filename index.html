@@ -1,146 +1,800 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="facebook-domain-verification" content="xn0ow8xc6n3wa9zt7v8qcriqfu9nkf" />
-    <title>Introduction Page - Little Excel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <title>Minh Lai | Portfolio</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Global Styles */
-        body {
+        * {
             margin: 0;
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #f8e1ff, #d4c1ec);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
             color: #333;
-            display: flex;
-            flex-direction: column;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .section {
             min-height: 100vh;
-        }
-        /* Navigation Menu */
-        nav {
-            background-color: rgba(60, 37, 106, 0.6);
-            padding: 15px;
             display: flex;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            align-items: center;
+            padding: 80px 40px;
+            position: relative;
+            transition: all 0.6s ease;
         }
-        nav a {
-            color: #fff;
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: 700;
-            transition: color 0.3s ease;
-        }
-        nav a:hover {
-            color: #e0d1ff;
-        }
-        /* Main Container */
+
         .container {
-            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #222;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #666;
+            min-height: 60px;
+            margin-bottom: 40px;
+        }
+
+        .caret {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background-color: #333;
+            animation: blink 0.7s infinite alternate;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: #999;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* Experience Section */
+        .experience {
+            background: #fff;
+        }
+
+        .experience .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .section-title {
+            position: sticky;
+            top: 100px;
+        }
+
+        .section-title h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        .section-title p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #333 0%, #ccc 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -46px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            border: 3px solid #fafafa;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .timeline-company {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .timeline-desc {
+            color: #555;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* Portfolio Section */
+        .portfolio {
+            background: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 100%);
+        }
+
+        .portfolio .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .project-card {
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .project-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 40px 20px;
-            animation: fadeIn 1s ease-in-out;
+            font-size: 3rem;
+            color: rgba(255,255,255,0.9);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .project-content {
+            padding: 24px;
         }
-        /* Headline & Paragraph */
-        .container h1 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            color: #3c256a;
+
+        .project-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #222;
         }
-        .container p {
-            font-size: 1.1em;
+
+        .project-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 16px;
             line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
         }
-        .container a {
-            color: #3c256a;
+
+        .project-link {
+            display: inline-block;
+            color: #333;
             text-decoration: none;
-            font-weight: 700;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-bottom: 2px solid #333;
+            padding-bottom: 2px;
+            transition: all 0.3s ease;
         }
-        .container a:hover {
-            text-decoration: underline;
+
+        .project-link:hover {
+            color: #666;
+            border-color: #666;
         }
+
         /* Contact Section */
         .contact {
-            margin-top: 30px;
+            background: #fff;
+            justify-content: center;
         }
+
+        .contact .container {
+            max-width: 600px;
+            text-align: center;
+        }
+
         .contact h2 {
-            font-size: 1.8em;
-            margin-bottom: 10px;
-            color: #3c256a;
-        }
-        .contact ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .contact li {
-            margin: 10px 0;
-        }
-        .contact a {
-            color: rgba(60, 37, 106, 1);
-            text-decoration: none;
+            font-size: clamp(2.5rem, 5vw, 4rem);
             font-weight: 700;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        .contact-subtitle {
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1.1rem;
+        }
+
+        .contact-form {
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            background: #fafafa;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #333;
+            background: #fff;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .btn-primary {
+            background: #333;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #333;
+            border: 2px solid #333;
+        }
+
+        .btn-secondary:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        .social-links {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.95rem;
             transition: color 0.3s ease;
         }
-        .contact a:hover {
-            color: rgba(60, 37, 106, 0.8);
-            text-decoration: underline;
+
+        .social-link:hover {
+            color: #333;
         }
-        /* Footer */
-        footer {
-            background-color: rgba(60, 37, 106, 0.6);
-            color: #fff;
-            text-align: center;
-            padding: 15px 0;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+
+        /* Navigation Dots */
+        .nav-dots {
+            position: fixed;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            margin: 16px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #333;
+            transform: scale(1.3);
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 60px 24px;
+            }
+
+            .experience .container,
+            .portfolio .container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .section-title {
+                position: static;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-dots {
+                display: none;
+            }
+
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .timeline-item::before {
+                left: -36px;
+            }
         }
     </style>
 </head>
 <body>
-<!-- Navigation Menu -->
-<nav>
-    <a href="https://www.facebook.com/little.excel">Fanpage</a>
-    <a href="https://www.youtube.com/@reallilexcel">Youtube</a>
-    <a href="https://www.tiktok.com/@lil.excel">Tiktok</a>
-    <a href="https://www.facebook.com/groups/little.excel/">Group</a>
-</nav>
-
-<!-- Main Content -->
-<div class="container">
-    <h1>Bạn có câu hỏi liên quan đến tin học văn phòng?</h1>
-    <p>
-        Với nhiều năm kinh nghiệm làm việc, giảng dạy và hỗ trợ cộng đồng,
-        <a href="https://www.facebook.com/little.excel">Little Excel</a> mang đến cho bạn các giải pháp về tin học văn phòng Word, Excel, Powerpoint, Google Sheets,
-        cũng như các giải pháp tự động hoá với n8n, UIPath và nhiều ứng dụng hữu ích khác.
-    </p>
-    <div class="contact">
-        <h2>Thông tin liên hệ</h2>
-        <ul>
-            <li><a href="mailto:minhlai.forwork@gmail.com">minhlai.forwork@gmail.com</a></li>
-            <li><a href="https://www.facebook.com/little.excel">Fanpage Facebook</a></li>
-            <li><a href="https://www.youtube.com/@reallilexcel">Kênh Youtube</a></li>
-            <li><a href="https://www.tiktok.com/@lil.excel">Kênh Tiktok</a></li>
-            <li><a href="https://www.facebook.com/groups/little.excel/">Group Facebook</a></li>
-        </ul>
-    </div>
+<!-- Navigation Dots -->
+<div class="nav-dots">
+    <div class="nav-dot active" data-section="0"></div>
+    <div class="nav-dot" data-section="1"></div>
+    <div class="nav-dot" data-section="2"></div>
+    <div class="nav-dot" data-section="3"></div>
 </div>
 
-<!-- Footer -->
-<footer>
-    <p>© 2025 excelogy.net</p>
-</footer>
+<!-- Hero Section -->
+<section class="section hero" id="section-0">
+    <div class="hero-content">
+        <h1 class="mono">Minh Lai</h1>
+        <div class="hero-subtitle mono">
+            <span id="typed-text"></span><span class="caret"></span>
+        </div>
+        <p style="color: #888; max-width: 600px; margin: 0 auto; line-height: 1.8" class="mono">
+            Fun fact #1:<br>
+            I really value the typing effect and smooth scrolling which took me 2 hours to build by myself. The aesthetic look took less than 2 minutes with AI. Still, combining self-learning with a virtual assistant feels great in this AI era.
+        </p>
+    </div>
+    <div class="scroll-indicator mono">↓ scroll</div>
+</section>
+
+<!-- Experience Section -->
+<section class="section experience" id="section-1">
+    <div class="container">
+        <div class="section-title mono">
+            <h2 class="mono">Work Experience</h2>
+            <p>Building solutions across data analytics, automation, and digital transformation.</p>
+        </div>
+        <div class="timeline mono">
+            <div class="timeline-item">
+                <div class="timeline-date mono">Sep 2024 - Present</div>
+                <div class="timeline-title ">Working Student - Portfolio Management</div>
+                <div class="timeline-company ">Roche</div>
+                <div class="timeline-desc ">
+                    Improving portfolio management by automating Google Sheets workflows and designing database structures. Contributing to Snowflake data-model development and creating KPI dashboards in Tableau. Supporting cross-team data tasks and documentation.
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date mono">Sep 2022 - Sep 2023</div>
+                <div class="timeline-title">Business Intelligence Analyst</div>
+                <div class="timeline-company">Catthai Corp</div>
+                <div class="timeline-desc">
+                    Top 500 manufacturing firm in Vietnam. Developed automation process with VBA reducing 40% daily tasks. Implemented YOLO object detection for factory operations. Maintained and optimized SQL queries ensuring 100% daily dashboard availability.
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date mono">Oct 2021 - Jul 2022</div>
+                <div class="timeline-title">IT Advisory - Technology Risk Intern</div>
+                <div class="timeline-company">KPMG</div>
+                <div class="timeline-desc">
+                    Participated in 9 IT Audit projects across different industries. Supported Viettel digital transformation by digitizing 1200+ papers in one week. Automated PowerPoint slide creation with VBA, saving 3+ hours per report.
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date mono">Aug 2021 - Oct 2021</div>
+                <div class="timeline-title">Business Intelligence Analyst</div>
+                <div class="timeline-company">Giaohangtietkiem</div>
+                <div class="timeline-desc">
+                    One of top 3 logistics companies in Vietnam. Managed same-day delivery project with 68 drivers, detected 8 fraud cases saving $3,500 monthly. Implemented route map tracker with IoT team and maintained 400+ SQL lines for daily reporting.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Education Section -->
+<section class="section experience" id="section-1.5" style="background: #f5f5f5;">
+    <div class="container">
+        <div class="section-title mono">
+            <h2 class="mono">Education</h2>
+            <p>Academic journey across borders and disciplines.</p>
+        </div>
+        <div class="timeline mono">
+            <div class="timeline-item">
+                <div class="timeline-date mono">Sep 2023 - Present</div>
+                <div class="timeline-title">Master in Software Engineering</div>
+                <div class="timeline-company">Hochschule Heilbronn, Germany</div>
+                <div class="timeline-desc">
+                    Continuing double Master degree program in Germany after one year at Vietnamese-German University.
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date mono">Sep 2022 - Sep 2023</div>
+                <div class="timeline-title">Master in Business Information Systems</div>
+                <div class="timeline-company">Vietnamese-German University</div>
+                <div class="timeline-desc">
+                    Started double Master degree program resulting in two Master degrees from both universities.
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date mono">Sep 2016 - Mar 2020</div>
+                <div class="timeline-title">Bachelor in Information Studies</div>
+                <div class="timeline-company">Vietnam National University</div>
+                <div class="timeline-desc">
+                    Highest entrance exam score. Final GPA: 3.27/4.0
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Portfolio Section -->
+<section class="section portfolio" id="section-2">
+    <div class="container">
+        <div class="projects-grid">
+            <div class="project-card">
+                <div class="project-image">🏵️</div>
+                <div class="project-content">
+                    <div class="project-title mono">Youtube Channel</div>
+                    <div class="project-desc">I teach MS Excel and other office knowledge</div>
+                    <a href="https://www.youtube.com/@reallilexcel" target="_blank" class="project-link mono">Sharing is caring</a>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image">🛒</div>
+                <div class="project-content">
+                    <div class="project-title mono">Shopping List</div>
+                    <div class="project-desc">Managing shopping items and money expense tracking system</div>
+                    <a href="https://docs.google.com/spreadsheets/d/1ijjoINCOqfHipJdYq202W9yeg9LCodi2MPOlcsomOzc/edit#gid=629175881" target="_blank" class="project-link mono">View Demo →</a>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📱</div>
+                <div class="project-content">
+                    <div class="project-title mono">QR Generator</div>
+                    <div class="project-desc">A web application for quick QR code generation and download</div>
+                    <a href="https://script.google.com/macros/s/AKfycbzvnkyM6LBCNBbKvJhuHPoOBsf5e-9uciTJfWqIqiIp5VxIs5NH4BR4xDhHZZolB_hM/exec?url=https://www.linkedin.com/in/milatr98/" target="_blank" class="project-link mono">Launch Web →</a>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">🤖</div>
+                <div class="project-content">
+                    <div class="project-title mono">WiDS Datathon</div>
+                    <div class="project-desc">Annual machine learning competition on Kaggle platform</div>
+                    <a href="https://www.kaggle.com/mikeling98/competitions" target="_blank" class="project-link mono">View Profile →</a>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">📊</div>
+                <div class="project-content">
+                    <div class="project-title mono">F1 Dashboard</div>
+                    <div class="project-desc">Update every F1 post-race result</div>
+                    <span class="project-link mono" style="opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #999;">Under Reconstruction</span>
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="section-title mono">
+            <h2 class="mono">Projects</h2>
+            <p>A collection of my work in data analysis, automation, business analytics and web development.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="section contact" id="section-3">
+    <div class="container mono">
+        <h2 class="mono">Let's Connect</h2>
+        <p class="contact-subtitle">Have a project in mind or just want to chat? Drop me a message.</p>
+
+        <form class="contact-form" id="contact-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label mono">Name *</label>
+                    <input type="text" class="form-input" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label mono">Email *</label>
+                    <input type="email" class="form-input" id="email" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label mono">Message *</label>
+                <textarea class="form-textarea" id="message" required></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Send Message</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+            </div>
+        </form>
+
+        <div class="social-links">
+            <a href="https://www.linkedin.com/in/milatr98/" target="_blank" class="social-link mono">LinkedIn</a>
+            <span style="color: #ddd;">|</span>
+            <a href="https://www.facebook.com/little.excel" target="_blank" class="social-link mono">Facebook</a>
+            <span style="color: #ddd;">|</span>
+            <a href="https://www.tiktok.com/@lil.excel" class="social-link mono">Tiktok</a>
+            <span style="color: #ddd;">|</span>
+            <a href="https://www.youtube.com/@reallilexcel" class="social-link mono">Youtube</a>
+            <span style="color: #ddd;">|</span>
+            <a href="mailto:minhlai.forwork@gmail.com" class="social-link mono">Email</a>
+        </div>
+        <div style="padding-top: 40px">
+            <p class="mono">Fun fact #2: <br>
+                Before this site is hosted on Google Apps Script. That's why it is just a big html page containing CSS and JS. Now it is on github pages.<br>
+                In the future after learning blender and add a ton of 3D, I may rent a vps and self-hosted :)
+            </p>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Typing Effect
+    const texts = [
+        "Project Manager | BI Analyst | IT Consultant",
+        "Data lover | Tech enthusiast",
+        "Fast learner and easy to adapt"
+    ];
+    let textIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    const typedTextElement = document.getElementById('typed-text');
+
+    function type() {
+        const currentText = texts[textIndex];
+
+        if (!isDeleting && charIndex < currentText.length) {
+            typedTextElement.textContent += currentText.charAt(charIndex);
+            charIndex++;
+            setTimeout(type, 80);
+        } else if (isDeleting && charIndex > 0) {
+            typedTextElement.textContent = currentText.substring(0, charIndex - 1);
+            charIndex--;
+            setTimeout(type, 50);
+        } else {
+            isDeleting = !isDeleting;
+            if (!isDeleting) {
+                textIndex = (textIndex + 1) % texts.length;
+            }
+            setTimeout(type, isDeleting ? 500 : 2000);
+        }
+    }
+
+    type();
+
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.timeline-item, .project-card').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Navigation Dots
+    const sections = document.querySelectorAll('.section');
+    const navDots = document.querySelectorAll('.nav-dot');
+
+    navDots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            const sectionIndex = parseInt(dot.dataset.section);
+            sections[sectionIndex].scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Update active dot on scroll
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach((section, index) => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (pageYOffset >= sectionTop - sectionHeight / 3) {
+                current = index;
+            }
+        });
+
+        navDots.forEach((dot, index) => {
+            dot.classList.remove('active');
+            if (index === current) {
+                dot.classList.add('active');
+            }
+        });
+    });
+
+    // Form Submission
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = {
+            date: new Date().toISOString(),
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            message: document.getElementById('message').value
+        };
+
+        try {
+            const response = await fetch("https://script.google.com/macros/s/AKfycby7la4uBWq9hUYOofY2K9Vhb8OAAdjzsatr_DGfELtx8CCIKxRJZ1nzJL_AKr288jA/exec", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            alert('Message sent successfully! I\'ll get back to you soon.');
+            document.getElementById('contact-form').reset();
+        } catch (error) {
+            alert('There was an error sending your message. Please try again.');
+            console.error('Error:', error);
+        }
+    });
+</script>
 </body>
 </html>
