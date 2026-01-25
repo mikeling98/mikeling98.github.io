@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minh Lai | Portfolio</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
+            color: #333;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 80px 40px;
+            position: relative;
+            transition: all 0.6s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #222;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #666;
+            min-height: 60px;
+            margin-bottom: 40px;
+        }
+
+        .caret {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background-color: #333;
+            animation: blink 0.7s infinite alternate;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: #999;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* Experience Section */
+        .experience {
+            background: #fff;
+        }
+
+        .experience .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .section-title {
+            position: sticky;
+            top: 100px;
+        }
+
+        .section-title h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        .section-title p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #333 0%, #ccc 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -46px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            border: 3px solid #fafafa;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .timeline-company {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .timeline-desc {
+            color: #555;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* Portfolio Section */
+
+
+        .portfolio .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+
+        .contact .container {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .contact h2 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+
+
+        /* Navigation Dots */
+        .nav-dots {
+            position: fixed;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            margin: 16px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #333;
+            transform: scale(1.3);
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 60px 24px;
+            }
+
+            .experience .container,
+            .portfolio .container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .section-title {
+                position: static;
+            }
+
+
+
+            .nav-dots {
+                display: none;
+            }
+
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .timeline-item::before {
+                left: -36px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation Dots -->
+<div class="nav-dots">
+    <div class="nav-dot active" data-section="0"></div>
+    <div class="nav-dot" data-section="1"></div>
+    <div class="nav-dot" data-section="2"></div>
+    <div class="nav-dot" data-section="3"></div>
+</div>
+
+<!-- Hero Section -->
+<section class="section hero" id="section-0">
+    <div class="hero-content">
+        <h1 class="mono">KPMG Vietnam</h1>
+        <p style="color: #888; max-width: 600px; margin: 0 auto; line-height: 1.8" class="mono">
+            Integrity, Excellence, Courage, Together, For Better
+    </div>
+    <div class="scroll-indicator mono">↓ scroll</div>
+</section>
+
+<!-- Experience Section -->
+<section class="section experience" id="section-1">
+    <div class="container">
+        <div class="section-title mono">
+            <h2 class="mono">What I learnt in KPMG Vietnam</h2>
+            <p>Professional and systematic thinking</p>
+        </div>
+        <div class="timeline mono">
+            <div class="timeline-item">
+                <div class="timeline-desc ">
+                    I was an IT Auditor following the audit team to various clients from banking to manufaturing sector, supporting in defining and implementing general IT controls and application controls procedures that affect financial reporting, as well as understanding the IT environment, potential technological issues, potential and significant risk involved and providing advice on risk mitigation. Also I assesses the client’s compliance with established IT policies, government policies, appropriate security response, and standard enterprise practices.
+                    <br>
+                    <br>
+                    The IT Auditing service for various clients including: Regional/International banks, Securities, Manufacturing, Insurance, Aviation...
+
+                </div>
+            </div>
+
+
+            <!--            <div class="timeline-item">-->
+            <!--                <div class="timeline-date mono">Aug 2021 - Oct 2021</div>-->
+            <!--                <div class="timeline-title">Business Intelligence Analyst</div>-->
+            <!--                <div class="timeline-company">Giaohangtietkiem</div>-->
+            <!--                <div class="timeline-desc">-->
+            <!--                    One of top 3 logistics companies in Vietnam. Managed same-day delivery project with 68 drivers, detected 8 fraud cases saving $3,500 monthly. Implemented route map tracker with IoT team and maintained 400+ SQL lines for daily reporting.-->
+            <!--                </div>-->
+            <!--            </div>-->
+        </div>
+    </div>
+</section>
+
+
+
+
+<script>
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.timeline-item, .project-card').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Navigation Dots
+    const sections = document.querySelectorAll('.section');
+    const navDots = document.querySelectorAll('.nav-dot');
+
+    navDots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            const sectionIndex = parseInt(dot.dataset.section);
+            sections[sectionIndex].scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Update active dot on scroll
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach((section, index) => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (pageYOffset >= sectionTop - sectionHeight / 3) {
+                current = index;
+            }
+        });
+
+        navDots.forEach((dot, index) => {
+            dot.classList.remove('active');
+            if (index === current) {
+                dot.classList.add('active');
+            }
+        });
+    });
+
+</script>
+</body>
+</html>
