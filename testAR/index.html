@@ -3,29 +3,42 @@
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>WebAR - Google Model Viewer</title>
- <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+ <title>MindAR - Quét mặt phẳng & Chụp ảnh gộp nền</title>
+ <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
  <style>
- body { margin: 0; font-family: sans-serif; background: #eceff1; }
- model-viewer { width: 100vw; height: 100vh; }
- .instruction { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 14px; pointer-events: none; }
+ body { margin: 0; overflow: hidden; }
+ #snap-btn {
+ position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+ width: 70px; height: 70px; border-radius: 50%; background: white;
+ border: 5px solid #ff4757; z-index: 9999; cursor: pointer;
+ }
  </style>
  </head>
  <body>
 
- <div class="instruction">
- Bấm vào biểu tượng AR góc dưới bên phải -> Quét mặt phẳng -> Tự quay/chụp bằng nút của hệ thống.
- </div>
+ <div id="snap-btn"></div>
 
- <model-viewer 
- src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
- ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
- ar 
- ar-modes="scene-viewer quick-look webxr" 
- camera-controls 
- touch-action="none"
- alt="Mô hình AR 3D">
- </model-viewer>
+ <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/examples/image-tracking/assets/card-example/card.mind;" color-space="sRGB" renderer="colorManagement: true, preserveDrawingBuffer: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+ <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-</body>
+ <a-entity mindar-image-target="targetIndex: 0">
+ <a-gltf-model rotation="0 0 0" position="0 0 0" scale="0.05 0.05 0.05" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"></a-gltf-model>
+ </a-entity>
+ </a-scene>
+
+ <script>
+ document.getElementById('snap-btn').addEventListener('click', () => {
+ // Tìm thẻ định dạng cảnh của A-Frame
+ const sceneEl = document.querySelector('a-scene');
+ // Lấy canvas gộp cả video camera nền và vật thể 3D
+ const canvas = sceneEl.components.screenshot.getCanvas('perspective');
+
+ const link = document.createElement('a');
+ link.download = 'webar-photo-complete.png';
+ link.href = canvas.toDataURL('image/png');
+ link.click();
+ });
+ </script>
+ </body>
  </html>
