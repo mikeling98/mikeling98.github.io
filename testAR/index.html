@@ -3,84 +3,104 @@
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>WebXR Hit-Test & Snapshot Demo</title>
+ <title>WebAR Hoàn Chỉnh - Sửa Lỗi Nền Đen</title>
  <style>
- body { margin: 0; overflow: hidden; }
- #ar-button { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 25px; font-size: 16px; z-index: 999; }
- #screenshot-button { position: absolute; bottom: 80px; right: 20px; width: 60px; height: 60px; background: white; border: 3px solid #007bff; border-radius: 50%; display: none; z-index: 999; }
+ body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+ #ar-instructions { position: absolute; top: 10px; width: 100%; text-align: center; color: white; background: rgba(0,0,0,0.6); padding: 5px 0; z-index: 10; }
+ #snap-btn {
+ position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+ width: 70px; height: 70px; border-radius: 50%; background: white;
+ border: 5px solid #007bff; z-index: 9999; display: none; cursor: pointer;
+ }
+ #snap-btn:active { background: #ccc; }
  </style>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
  </head>
  <body>
 
- <button id="ar-button">Bắt đầu AR</button>
- <button id="screenshot-button"></button>
+ <div id="ar-instructions">Đang tải hệ thống AR...</div>
+ <button id="snap-btn" title="Chụp ảnh"></button>
 
  <script type="module">
  import { ARButton } from 'https://unpkg.com/three@0.128.0/examples/jsm/webxr/ARButton.js';
 
- let container, camera, scene, renderer;
- let reticle; // Vòng tròn tìm mặt phẳng
+ let camera, scene, renderer, reticle;
  let hitTestSource = null;
  let hitTestSourceRequested = false;
+ let shouldTakeSnapshot = false; // Cờ đánh dấu khi ấn chụp
 
- const arButton = document.getElementById('ar-button');
- const snapButton = document.getElementById('screenshot-button');
+ const insDiv = document.getElementById('ar-instructions');
+ const snapBtn = document.getElementById('snap-btn');
 
- // BƯỚC 1: Khởi tạo Three.js với cấu hình chống nền đen
  function init() {
  scene = new THREE.Scene();
  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
- // QUAN TRỌNG: preserveDrawingBuffer giúp canvas không bị xóa sau khi vẽ
- renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+ // Cấu hình QUAN TRỌNG để không bị đen màn hình khi chụp
+ renderer = new THREE.WebGLRenderer({ 
+ antialias: true, 
+ alpha: true, 
+ preserveDrawingBuffer: true // Giữ lại hình ảnh trong bộ nhớ đệm
+ });
  renderer.setPixelRatio(window.devicePixelRatio);
  renderer.setSize(window.innerWidth, window.innerHeight);
  renderer.xr.enabled = true;
  document.body.appendChild(renderer.domElement);
 
- // Tạo nút vào chế độ AR của trình duyệt
- const webxrButton = ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] });
- document.body.appendChild(webxrButton);
+ // Khởi tạo nút AR chuẩn của trình duyệt
+ const arButton = ARButton.createButton(renderer, { 
+ requiredFeatures: ['hit-test'],
+ optionalFeatures: ['dom-overlay'],
+ domOverlay: { root: document.body }
+ });
+ document.body.appendChild(arButton);
 
- webxrButton.addEventListener('click', () => {
- snapButton.style.display = 'block';
- arButton.style.display = 'none';
+ arButton.addEventListener('click', () => {
+ insDiv.innerText = "Hãy di chuyển camera để quét mặt phẳng (sàn nhà/mặt bàn)...";
+ snapBtn.style.display = 'block';
  });
 
- // Tạo vòng tròn chỉ thị để quét mặt phẳng
+ // Vòng tròn định vị mặt phẳng
  reticle = new THREE.Mesh(
- new THREE.RingGeometry(0.15, 0.2, 32).rotateX(-Math.PI / 2),
+ new THREE.RingGeometry(0.1, 0.13, 32).rotateX(-Math.PI / 2),
  new THREE.MeshBasicMaterial({ color: 0x00ff00 })
  );
  reticle.matrixAutoUpdate = false;
  reticle.visible = false;
  scene.add(reticle);
 
- // Thêm ánh sáng và vật thể mẫu (Hình hộp thay cho Pokemon)
+ // Ánh sáng
  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
  scene.add(light);
 
- // Sự kiện chạm màn hình để đặt vật thể vào vị trí vòng tròn chỉ thị
+ // Đặt vật thể khi chạm màn hình
  const controller = renderer.xr.getController(0);
  controller.addEventListener('select', onSelect);
  scene.add(controller);
 
+ window.addEventListener('resize', onWindowResize);
  renderer.setAnimationLoop(render);
  }
 
  function onSelect() {
  if (reticle.visible) {
- // Đặt một khối hộp tại vị trí quét được
- const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
- const material = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+ // Tạo một hình cầu màu vàng (giống bóng Pokemon) để test tránh lỗi file 3D
+ const geometry = new THREE.SphereGeometry(0.1, 32, 32);
+ const material = new THREE.MeshPhongMaterial({ color: 0xffcc00 });
  const mesh = new THREE.Mesh(geometry, material);
+
  reticle.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
  scene.add(mesh);
+ insDiv.innerText = "Đã đặt vật thể! Nhấn nút tròn để chụp ảnh.";
  }
  }
 
- // BƯỚC 2: Xử lý tìm mặt phẳng (Hit-Test) ngoài thực tế
+ function onWindowResize() {
+ camera.aspect = window.innerWidth / window.innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(window.innerWidth, window.innerHeight);
+ }
+
  function render(timestamp, frame) {
  if (frame) {
  const referenceSpace = renderer.xr.getReferenceSpace();
@@ -95,6 +115,8 @@
  session.addEventListener('end', () => {
  hitTestSourceRequested = false;
  hitTestSource = null;
+ snapBtn.style.display = 'none';
+ insDiv.innerText = "Đã thoát AR";
  });
  hitTestSourceRequested = true;
  }
@@ -110,20 +132,28 @@
  }
  }
  }
+
+ // Vẽ toàn bộ khung cảnh lên màn hình
  renderer.render(scene, camera);
- }
 
- // BƯỚC 3: Xử lý Chụp ảnh (Sửa lỗi nền đen hoàn toàn)
- snapButton.addEventListener('click', () => {
- // Lấy dữ liệu ảnh 3D từ Canvas
+ // SỬA LỖI NỀN ĐEN: Chụp ảnh NGAY TRONG LÚC ĐANG RENDER KHUNG HÌNH
+ if (shouldTakeSnapshot) {
+ shouldTakeSnapshot = false; // Reset cờ
+ try {
  const dataURL = renderer.domElement.toDataURL("image/png");
-
- // Tạo link ảo để tải ảnh về máy
  const link = document.createElement('a');
- link.download = 'ar-pokemon-photo.png';
+ link.download = 'webar-photo.png';
  link.href = dataURL;
  link.click();
- alert("Đã chụp! Lưu ý: Trên một số trình duyệt bảo mật cao, ảnh tải về sẽ có nền trong suốt (chỉ thấy vật thể 3D). Hãy dùng Phương pháp 1 hoặc 3 nếu muốn lấy cả nền camera.");
+ } catch (err) {
+ console.error("Lỗi chụp ảnh:", err);
+ }
+ }
+ }
+
+ // Khi người dùng bấm nút chụp, ta chỉ dựng cờ lên, việc chụp sẽ do hàm render xử lý
+ snapBtn.addEventListener('click', () => {
+ shouldTakeSnapshot = true;
  });
 
  init();
