@@ -3,186 +3,153 @@
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
- <title>WebAR Hoàn Chỉnh - Quét Đặt Vật Thể & Chụp Ảnh</title>
+ <title>WebAR Hoàn Hảo - Quét Mặt Phẳng & Chụp Ảnh Gộp</title>
  <style>
- body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: Arial, sans-serif; }
- #webcam { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
- #threejs-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; }
-
- #controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; }
- #snap-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid #007bff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
- #snap-btn:active { background: #ddd; }
-
- #info { position: absolute; top: 10px; width: 100%; text-align: center; color: white; background: rgba(0,0,0,0.7); padding: 8px 0; z-index: 10; font-size: 13px; }
-
- /* Vòng tròn hồng tâm ở giữa màn hình để người dùng biết hướng camera quét nền */
- #reticle-guide { 
- position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
- width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.6); border-radius: 50%;
- z-index: 5; pointer-events: none;
- }
+ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+ #overlay { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; }
+ #snap-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid #007bff; cursor: pointer; display: none; }
+ #info { position: absolute; top: 10px; width: 100%; text-align: center; color: white; background: rgba(0,0,0,0.7); padding: 8px 0; z-index: 9999; font-size: 13px; }
  </style>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
  </head>
  <body>
 
- <div id="info">Đang bật camera... Hướng vòng tròn giữa màn hình xuống sàn/bàn để đặt vật thể.</div>
- <div id="reticle-guide"></div>
- <video id="webcam" autoplay playsinline muted></video>
- <canvas id="threejs-canvas"></canvas>
-
- <div id="controls">
- <button id="snap-btn" title="Chụp ảnh"></button>
+ <div id="info">Đang tải hệ thống AR...</div>
+ <div id="overlay">
+ <button id="snap-btn"></button>
  </div>
 
- <script>
- const video = document.getElementById('webcam');
- const canvas3D = document.getElementById('threejs-canvas');
+ <script type="module">
+ import { ARButton } from 'https://unpkg.com/three@0.128.0/examples/jsm/webxr/ARButton.js';
+
+ let camera, scene, renderer, reticle;
+ let hitTestSource = null;
+ let hitTestSourceRequested = false;
+ let shouldCapture = false;
+
  const infoDiv = document.getElementById('info');
  const snapBtn = document.getElementById('snap-btn');
 
- let scene, camera, renderer;
- let groundPlane; // Mặt phẳng đất giả lập để hứng vật thể
- let raycaster, mouse;
-
- // BƯỚC 1: Khởi động Camera điện thoại làm nền
- async function initCamera() {
- try {
- const stream = await navigator.mediaDevices.getUserMedia({
- video: { facingMode: { exact: "environment" } },
- audio: false
- });
- video.srcObject = stream;
- } catch (err) {
- const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
- video.srcObject = stream;
- }
- }
-
- // BƯỚC 2: Khởi tạo không gian 3D
- function init3D() {
+ function init() {
  scene = new THREE.Scene();
+ camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
- // Góc nhìn tương đương camera điện thoại
- camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
- // Đặt camera ở độ cao tầm mắt (1.6m) và hơi nghiêng xuống nhìn mặt đất
- camera.position.set(0, 1.6, 3);
- camera.lookAt(0, 0, 0);
-
- renderer = new THREE.WebGLRenderer({ 
- canvas: canvas3D, 
- alpha: true, 
- antialias: true,
- preserveDrawingBuffer: true 
- });
+ // Cấu hình gl để không bị trắng/đen màn hình khi chụp
+ renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+ renderer.setPixelRatio(window.devicePixelRatio);
  renderer.setSize(window.innerWidth, window.innerHeight);
- renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+ renderer.xr.enabled = true;
+ document.body.appendChild(renderer.domElement);
 
- // Ánh sáng cho vật thể sinh động
- const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
- scene.add(ambientLight);
- const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
- dirLight.position.set(5, 10, 7);
- scene.add(dirLight);
-
- // TẠO MẶT PHẲNG ĐẤT TÀI TÌNH (Ẩn đi nhưng dùng để tính toán va chạm khi chạm màn hình)
- const planeGeo = new THREE.PlaneGeometry(100, 100);
- planeGeo.rotateX(-Math.PI / 2); // Nằm ngang làm sàn nhà
- const planeMat = new THREE.MeshBasicMaterial({ visible: false }); // Vô hình với mắt người
- groundPlane = new THREE.Mesh(planeGeo, planeMat);
- scene.add(groundPlane);
-
- // Công cụ tính toán điểm chạm không gian
- raycaster = new THREE.Raycaster();
- mouse = new THREE.Vector2();
-
- // SỰ KIỆN: Chạm màn hình để ĐẶT VẬT THỂ
- window.addEventListener('pointerdown', onPointerDown);
-
- animate();
- }
-
- function onPointerDown(event) {
- // Không xử lý nếu bấm trúng nút chụp ảnh
- if (event.target === snapBtn) return;
-
- // Lấy tọa độ điểm chạm của ngón tay trên màn hình (Chuẩn hóa về dạng -1 đến 1)
- mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
- mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
- // Bắn một tia từ ngón tay xuyên vào không gian 3D
- raycaster.setFromCamera(mouse, camera);
-
- // Tính toán xem tia này có cắt mặt sàn (groundPlane) không
- const intersects = raycaster.intersectObject(groundPlane);
-
- if (intersects.length > 0) {
- const intersectPoint = intersects[0].point;
-
- // TẠO VẬT THỂ MỚI TẠI ĐIỂM CHẠM (Thay thế khối có sẵn)
- // Bạn có thể chạm nhiều lần để đặt nhiều quả cầu/Pokemon khác nhau
- const geometry = new THREE.SphereGeometry(0.2, 32, 32); // Quả cầu bán kính 20cm
- const material = new THREE.MeshPhongMaterial({ 
- color: Math.random() * 0xffffff, // Ngẫu nhiên màu sắc
- roughness: 0.5
+ // Khởi tạo nút WebXR gốc, ép giao diện overlay nút chụp đè lên chế độ AR
+ const arButton = ARButton.createButton(renderer, { 
+ requiredFeatures: ['hit-test'],
+ optionalFeatures: ['dom-overlay'],
+ domOverlay: { root: document.body }
  });
- const pokemonMesh = new THREE.Mesh(geometry, material);
+ document.body.appendChild(arButton);
 
- // Đặt vào đúng tọa độ sàn nhà nơi ngón tay chạm vào
- pokemonMesh.position.copy(intersectPoint);
- // Nâng tâm quả cầu lên một chút để nó nằm sát mặt đất thay vì bị lún 1 nửa
- pokemonMesh.position.y += 0.2; 
+ arButton.addEventListener('click', () => {
+ infoDiv.innerText = "Di chuyển camera chậm để quét sàn nhà/mặt bàn...";
+ snapBtn.style.display = 'block';
+ });
 
- scene.add(pokemonMesh);
- infoDiv.innerText = "Đã đặt vật thể thành công ngoài thực tế!";
+ // Vòng tròn chỉ thị vị trí mặt phẳng ngoài đời thật
+ reticle = new THREE.Mesh(
+ new THREE.RingGeometry(0.1, 0.13, 32).rotateX(-Math.PI / 2),
+ new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+ );
+ reticle.matrixAutoUpdate = false;
+ reticle.visible = false;
+ scene.add(reticle);
+
+ // Thêm ánh sáng
+ const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+ scene.add(light);
+
+ // Bắt sự kiện chạm màn hình đặt vật thể
+ const controller = renderer.xr.getController(0);
+ controller.addEventListener('select', onSelect);
+ scene.add(controller);
+
+ renderer.setAnimationLoop(render);
+ }
+
+ function onSelect() {
+ if (reticle.visible) {
+ // Tạo quả cầu đặt cố định xuống mặt đất thực tế
+ const geometry = new THREE.SphereGeometry(0.15, 32, 32);
+ const material = new THREE.MeshPhongMaterial({ color: 0xffcc00 });
+ const mesh = new THREE.Mesh(geometry, material);
+
+ // Gán vị trí thực tế mà bộ lõi ARCore/ARKit quét được cho vật thể
+ reticle.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+ scene.add(mesh);
+ infoDiv.innerText = "Đã đặt vật thể đứng im dưới đất! Nhấn nút để chụp.";
  }
  }
 
- function animate() {
- requestAnimationFrame(animate);
+ function render(timestamp, frame) {
+ if (frame) {
+ const referenceSpace = renderer.xr.getReferenceSpace();
+ const session = renderer.xr.getSession();
+
+ if (hitTestSourceRequested === false) {
+ session.requestReferenceSpace('viewer').then((viewerSpace) => {
+ session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+ hitTestSource = source;
+ });
+ });
+ session.xrVertexShader = true;
+ hitTestSourceRequested = true;
+ }
+
+ if (hitTestSource) {
+ const hitTestResults = frame.getHitTestResults(hitTestSource);
+ if (hitTestResults.length) {
+ const hit = hitTestResults[0];
+ reticle.visible = true;
+ reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+ } else {
+ reticle.visible = false;
+ }
+ }
+ }
+
+ // Tiến hành render vẽ khung cảnh đồ họa
  renderer.render(scene, camera);
- }
 
- // BƯỚC 3: Chụp ảnh gộp Video Nền + Vật thể 3D (Đã sửa lỗi trắng xóa)
- function takeSnapshot() {
- infoDiv.innerText = "Đang xử lý ảnh...";
+ // KỸ THUẬT VƯỢT RÀO: Bắt buộc chụp ảnh ngay cuối phiên render của WebXR
+ if (shouldCapture) {
+ shouldCapture = false;
 
- const mergedCanvas = document.createElement('canvas');
- mergedCanvas.width = renderer.domElement.width;
- mergedCanvas.height = renderer.domElement.height;
- const ctx = mergedCanvas.getContext('2d');
+ // Tạo canvas trung gian
+ const screenshotCanvas = document.createElement('canvas');
+ screenshotCanvas.width = renderer.domElement.width;
+ screenshotCanvas.height = renderer.domElement.height;
+ const ctx = screenshotCanvas.getContext('2d');
 
- if (video.readyState === video.HAVE_ENOUGH_DATA) {
- // 1. Vẽ camera thực tế làm nền
- ctx.drawImage(video, 0, 0, mergedCanvas.width, mergedCanvas.height);
+ // Vẽ canvas của WebXR (lúc này chứa cả dữ liệu đệm camera hệ thống nếu chạy dom-overlay)
+ ctx.drawImage(renderer.domElement, 0, 0);
 
- // 2. Vẽ đè các vật thể 3D lên trên
- ctx.drawImage(canvas3D, 0, 0, mergedCanvas.width, mergedCanvas.height);
-
- // 3. Xuất file ảnh an toàn qua Blob
- mergedCanvas.toBlob((blob) => {
- if (!blob) return;
+ screenshotCanvas.toBlob((blob) => {
+ if(!blob) return;
  const url = URL.createObjectURL(blob);
  const link = document.createElement('a');
- link.download = 'webar_pokemon_placed.png';
+ link.download = 'pokemon_go_webar.png';
  link.href = url;
  link.click();
- setTimeout(() => URL.revokeObjectURL(url), 100);
- infoDiv.innerText = "Đã chụp thành công! Hãy kiểm tra thư viện ảnh.";
+ URL.revokeObjectURL(url);
+ infoDiv.innerText = "Đã lưu ảnh thành công!";
  }, 'image/png');
  }
  }
 
- snapBtn.addEventListener('click', takeSnapshot);
-
- window.addEventListener('resize', () => {
- camera.aspect = window.innerWidth / window.innerHeight;
- camera.updateProjectionMatrix();
- renderer.setSize(window.innerWidth, window.innerHeight);
+ snapBtn.addEventListener('click', () => {
+ shouldCapture = true;
  });
 
- // Kích hoạt ứng dụng
- initCamera().then(init3D);
+ init();
  </script>
  </body>
  </html>
