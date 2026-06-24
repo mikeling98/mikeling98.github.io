@@ -3,10 +3,10 @@
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
- <title>WebAR Hoàn Chỉnh với AR.js - Chống Lỗi Đen Ảnh</title>
+ <title>WebAR với MindAR - Sửa Lỗi Nền Trắng</title>
 
- <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
- <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+ <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
  <style>
  body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
@@ -15,7 +15,6 @@
  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
  z-index: 9999; text-align: center; width: 100%; pointer-events: none;
  }
- /* Nút bấm phải bật pointer-events để click được vì khung controls đang tắt */
  #snap-btn { 
  width: 75px; height: 75px; border-radius: 50%; background: white; 
  border: 5px solid #007bff; cursor: pointer; pointer-events: auto;
@@ -32,96 +31,118 @@
  </head>
  <body>
 
- <div id="info">Đang khởi tạo AR.js... Chạm vào màn hình để đặt vật thể đứng im dưới sàn.</div>
+ <div id="info">Đang khởi tạo MindAR... Hãy hướng camera ra không gian và chạm màn hình để đặt vật thể.</div>
 
  <div id="controls">
  <button id="snap-btn" title="Chụp ảnh ngay"></button>
  </div>
 
  <a-scene 
+ mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: true;" 
  embedded 
- arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
- screenshot
- renderer="preserveDrawingBuffer: true; alpha: true;">
+ color-space="sRGB" 
+ renderer="preserveDrawingBuffer: true; alpha: true; colorManagement: true;" 
+ vr-mode-ui="enabled: false" 
+ device-orientation-permission-ui="enabled: false">
 
  <a-entity light="type: ambient; intensity: 0.8;"></a-entity>
- <a-entity light="type: directional; intensity: 0.5;" position="1 2 1"></a-entity>
+ <a-entity light="type: directional; intensity: 0.6;" position="1 3 2"></a-entity>
 
- <a-camera gps-camera rotation-reader look-controls="enabled: true"></a-camera>
+ <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
 
- <a-entity id="pokemon-group"></a-entity>
+ <a-entity id="ar-objects-container"></a-entity>
 
  </a-scene>
 
  <script>
  const infoDiv = document.getElementById('info');
  const snapBtn = document.getElementById('snap-btn');
- const pokemonGroup = document.getElementById('pokemon-group');
+ const objectsContainer = document.getElementById('ar-objects-container');
  const sceneEl = document.querySelector('a-scene');
 
- // Chờ hệ thống AR.js và Camera sẵn sàng
- sceneEl.addEventListener('renderstart', () => {
- infoDiv.innerText = "AR.js Sẵn sàng! Hãy hướng camera xuống đất và chạm màn hình để đặt vật thể.";
+ sceneEl.addEventListener("arReady", () => {
+ infoDiv.innerText = "MindAR đã sẵn sàng! Chạm vào màn hình để đặt quả cầu cố định ngoài không gian.";
  });
 
- // TÍNH NĂNG ĐẶT VẬT THỂ: Tính toán khoảng cách dựa trên hướng camera phóng ra
+ // TÍNH NĂNG ĐẶT VẬT THỂ CỐ ĐỊNH TRONG KHÔNG GIAN
  window.addEventListener('click', (event) => {
- // Loại trừ nếu bấm trúng nút chụp ảnh
  if (event.target === snapBtn) return;
 
- // Lấy góc quay hiện tại của camera điện thoại ngoài đời thực
  const cameraEl = document.querySelector('a-camera');
  const cameraRotation = cameraEl.getAttribute('rotation');
  const cameraPosition = cameraEl.getAttribute('position');
 
- // Tính toán vị trí "dưới đất" phía trước camera khoảng 2 mét (giả lập mặt phẳng)
- const angleInRadians = (cameraRotation.y * Math.PI) / 180;
- const distance = 2; // Cách người dùng 2 mét
+ // Tính toán ma trận lượng giác dựa trên hướng nghiêng/xoay của điện thoại để đặt vật thể
+ const angleY = (cameraRotation.y * Math.PI) / 180;
+ const angleX = (cameraRotation.x * Math.PI) / 180;
+ const distance = 2.5; // Đặt vật thể cách xa điện thoại 2.5 mét
 
- const targetX = cameraPosition.x - Math.sin(angleInRadians) * distance;
- const targetZ = cameraPosition.z - Math.cos(angleInRadians) * distance;
- const targetY = cameraPosition.y - 1.2; // Đặt thấp xuống dưới tầm mắt 1.2m (Sàn nhà)
+ // Tính tọa độ XYZ trong không gian 3D thực tế
+ const targetX = cameraPosition.x - Math.sin(angleY) * Math.cos(angleX) * distance;
+ const targetZ = cameraPosition.z - Math.cos(angleY) * Math.cos(angleX) * distance;
+ const targetY = cameraPosition.y + Math.sin(angleX) * distance;
 
- // Tạo vật thể mới bằng thẻ A-Frame (Quả cầu 3D tương tự Pokemon)
- const newElement = document.createElement('a-sphere');
- newElement.setAttribute('position', `${targetX} ${targetY} ${targetZ}`);
- newElement.setAttribute('radius', '0.25');
- // Random màu sắc để phân biệt các vật thể
+ // Tạo vật thể 3D
+ const sphere = document.createElement('a-sphere');
+ sphere.setAttribute('position', `${targetX} ${targetY} ${targetZ}`);
+ sphere.setAttribute('radius', '0.2');
+
+ // Random màu sắc để bạn dễ quan sát khi đặt nhiều vật thể
  const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
- newElement.setAttribute('color', randomColor);
+ sphere.setAttribute('color', randomColor);
 
- // Hiệu ứng đổ bóng cơ bản để tăng độ chân thực
- newElement.setAttribute('shadow', 'cast: true');
-
- // Thêm vật thể vào không gian
- pokemonGroup.appendChild(newElement);
- infoDiv.innerText = "Đã đặt vật thể! Hãy đi vòng quanh để kiểm tra độ đứng im.";
+ // Đưa vào không gian cảnh
+ objectsContainer.appendChild(sphere);
+ infoDiv.innerText = "Đã đặt vật thể! Hãy di chuyển máy, vật thể sẽ đứng im theo góc nhìn phối cảnh.";
  });
 
- // TÍNH NĂNG CHỤP ẢNH: Sử dụng bộ gộp canvas thuần của A-Frame chống nền đen/trắng
+ // TÍNH NĂNG CHỤP ẢNH: Kỹ thuật gộp luồng canvas trực tiếp chống lỗi trắng hình
  snapBtn.addEventListener('click', () => {
- infoDiv.innerText = "Đang gộp camera và ảnh 3D...";
+ infoDiv.innerText = "Đang xử lý ảnh chụp an toàn...";
 
- // Gọi component screenshot tích hợp sẵn của A-Frame để gộp video camera gốc và vật thể 3D
- const screenshotComponent = sceneEl.components.screenshot;
+ // 1. Lấy canvas chứa vật thể 3D của A-Frame/Three.js
+ const threeCanvas = sceneEl.renderer.domElement;
 
- if (screenshotComponent) {
- // Lấy canvas đã gộp góc nhìn perspective
- const captureCanvas = screenshotComponent.getCanvas('perspective');
+ // 2. Tìm thẻ video camera thật mà MindAR tự động sinh ra trong DOM
+ const mindarVideo = document.querySelector('video');
+
+ if (!mindarVideo) {
+ infoDiv.innerText = "Lỗi: Không tìm thấy luồng video camera.";
+ return;
+ }
+
+ // 3. Tạo một canvas ảo để gộp thủ công
+ const mergedCanvas = document.createElement('canvas');
+ mergedCanvas.width = threeCanvas.width;
+ mergedCanvas.height = threeCanvas.height;
+ const ctx = mergedCanvas.getContext('2d');
 
  try {
- const dataURL = captureCanvas.toDataURL('image/png');
- const link = document.createElement('a');
- link.download = 'arjs_pokemon_snapshot.png';
- link.href = dataURL;
- link.click();
- infoDiv.innerText = "Chụp thành công! Ảnh đã được tải về máy.";
- } catch (err) {
- console.error(err);
- infoDiv.innerText = "Lỗi xuất ảnh bảo mật. Vui lòng kiểm tra lại HTTPS.";
+ // Bước 3.1: Vẽ camera thật làm nền phía dưới
+ ctx.drawImage(mindarVideo, 0, 0, mergedCanvas.width, mergedCanvas.height);
+
+ // Bước 3.2: Vẽ đè vật thể 3D lên trên nền camera đó
+ ctx.drawImage(threeCanvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
+
+ // Bước 3.3: Xuất dữ liệu qua Blob để tránh lỗi chuỗi bảo mật trên mobile
+ mergedCanvas.toBlob((blob) => {
+ if (!blob) {
+ infoDiv.innerText = "Lỗi bảo mật trình duyệt chặn xuất ảnh.";
+ return;
  }
- } else {
- infoDiv.innerText = "Lỗi: Không tìm thấy module Screenshot.";
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement('a');
+ link.download = 'mindar_snapshot_success.png';
+ link.href = url;
+ link.click();
+
+ setTimeout(() => URL.revokeObjectURL(url), 100);
+ infoDiv.innerText = "Chụp thành công! Ảnh đã được lưu.";
+ }, 'image/png');
+
+ } catch (error) {
+ console.error(error);
+ infoDiv.innerText = "Thất bại: Trình duyệt của bạn khóa quyền sao chép pixel.";
  }
  });
  </script>
