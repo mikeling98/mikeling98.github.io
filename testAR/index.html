@@ -3,55 +3,24 @@
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
- <title>WebAR với MindAR - Sửa Lỗi Nền Trắng</title>
-
+ <title>WebAR - Vượt rào khóa quyền Pixel</title>
  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
  <style>
  body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
-
- #controls { 
- position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
- z-index: 9999; text-align: center; width: 100%; pointer-events: none;
- }
- #snap-btn { 
- width: 75px; height: 75px; border-radius: 50%; background: white; 
- border: 5px solid #007bff; cursor: pointer; pointer-events: auto;
- box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
- }
- #snap-btn:active { background: #ddd; }
-
- #info { 
- position: fixed; top: 10px; width: 100%; text-align: center; 
- color: white; background: rgba(0,0,0,0.7); padding: 8px 0; 
- z-index: 9999; font-size: 13px; pointer-events: none;
- }
+ #controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; }
+ #snap-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid #007bff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+ #info { position: fixed; top: 10px; width: 100%; text-align: center; color: white; background: rgba(0,0,0,0.7); padding: 8px 0; z-index: 9999; font-size: 13px; }
  </style>
  </head>
  <body>
 
- <div id="info">Đang khởi tạo MindAR... Hãy hướng camera ra không gian và chạm màn hình để đặt vật thể.</div>
+ <div id="info">Đang kết nối camera phần cứng... Chạm màn hình để đặt vật thể.</div>
+ <div id="controls"><button id="snap-btn"></button></div>
 
- <div id="controls">
- <button id="snap-btn" title="Chụp ảnh ngay"></button>
- </div>
-
- <a-scene 
- mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: true;" 
- embedded 
- color-space="sRGB" 
- renderer="preserveDrawingBuffer: true; alpha: true; colorManagement: true;" 
- vr-mode-ui="enabled: false" 
- device-orientation-permission-ui="enabled: false">
-
- <a-entity light="type: ambient; intensity: 0.8;"></a-entity>
- <a-entity light="type: directional; intensity: 0.6;" position="1 3 2"></a-entity>
-
+ <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: true;" embedded renderer="preserveDrawingBuffer: true; alpha: true;">
  <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
-
  <a-entity id="ar-objects-container"></a-entity>
-
  </a-scene>
 
  <script>
@@ -59,90 +28,76 @@
  const snapBtn = document.getElementById('snap-btn');
  const objectsContainer = document.getElementById('ar-objects-container');
  const sceneEl = document.querySelector('a-scene');
+ let imageCapture = null;
 
+ // Lấy luồng camera trực tiếp từ phần cứng để chuẩn bị chụp gốc
  sceneEl.addEventListener("arReady", () => {
- infoDiv.innerText = "MindAR đã sẵn sàng! Chạm vào màn hình để đặt quả cầu cố định ngoài không gian.";
+ infoDiv.innerText = "Hệ thống sẵn sàng! Chạm để đặt vật thể.";
+ const videoTrack = document.querySelector('video').srcObject.getVideoTracks()[0];
+ // Kích hoạt API ImageCapture trực tiếp từ phần cứng camera
+ if (window.ImageCapture) {
+ imageCapture = new ImageCapture(videoTrack);
+ }
  });
 
- // TÍNH NĂNG ĐẶT VẬT THỂ CỐ ĐỊNH TRONG KHÔNG GIAN
- window.addEventListener('click', (event) => {
- if (event.target === snapBtn) return;
-
+ // Đặt vật thể đứng im theo con quay hồi chuyển
+ window.addEventListener('click', (e) => {
+ if (e.target === snapBtn) return;
  const cameraEl = document.querySelector('a-camera');
- const cameraRotation = cameraEl.getAttribute('rotation');
- const cameraPosition = cameraEl.getAttribute('position');
+ const rotation = cameraEl.getAttribute('rotation');
+ const position = cameraEl.getAttribute('position');
 
- // Tính toán ma trận lượng giác dựa trên hướng nghiêng/xoay của điện thoại để đặt vật thể
- const angleY = (cameraRotation.y * Math.PI) / 180;
- const angleX = (cameraRotation.x * Math.PI) / 180;
- const distance = 2.5; // Đặt vật thể cách xa điện thoại 2.5 mét
+ const angleY = (rotation.y * Math.PI) / 180;
+ const angleX = (rotation.x * Math.PI) / 180;
+ const distance = 2;
 
- // Tính tọa độ XYZ trong không gian 3D thực tế
- const targetX = cameraPosition.x - Math.sin(angleY) * Math.cos(angleX) * distance;
- const targetZ = cameraPosition.z - Math.cos(angleY) * Math.cos(angleX) * distance;
- const targetY = cameraPosition.y + Math.sin(angleX) * distance;
+ const targetX = position.x - Math.sin(angleY) * Math.cos(angleX) * distance;
+ const targetZ = position.z - Math.cos(angleY) * Math.cos(angleX) * distance;
+ const targetY = position.y + Math.sin(angleX) * distance;
 
- // Tạo vật thể 3D
  const sphere = document.createElement('a-sphere');
  sphere.setAttribute('position', `${targetX} ${targetY} ${targetZ}`);
- sphere.setAttribute('radius', '0.2');
-
- // Random màu sắc để bạn dễ quan sát khi đặt nhiều vật thể
- const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
- sphere.setAttribute('color', randomColor);
-
- // Đưa vào không gian cảnh
+ sphere.setAttribute('radius', '0.15');
+ sphere.setAttribute('color', '#' + Math.floor(Math.random()*16777215).toString(16));
  objectsContainer.appendChild(sphere);
- infoDiv.innerText = "Đã đặt vật thể! Hãy di chuyển máy, vật thể sẽ đứng im theo góc nhìn phối cảnh.";
  });
 
- // TÍNH NĂNG CHỤP ẢNH: Kỹ thuật gộp luồng canvas trực tiếp chống lỗi trắng hình
- snapBtn.addEventListener('click', () => {
- infoDiv.innerText = "Đang xử lý ảnh chụp an toàn...";
-
- // 1. Lấy canvas chứa vật thể 3D của A-Frame/Three.js
+ // CHỤP ẢNH PHẦN CỨNG (Sửa triệt để lỗi khóa quyền pixel)
+ snapBtn.addEventListener('click', async () => {
+ infoDiv.innerText = "Đang chụp từ phần cứng camera...";
  const threeCanvas = sceneEl.renderer.domElement;
 
- // 2. Tìm thẻ video camera thật mà MindAR tự động sinh ra trong DOM
- const mindarVideo = document.querySelector('video');
-
- if (!mindarVideo) {
- infoDiv.innerText = "Lỗi: Không tìm thấy luồng video camera.";
- return;
- }
-
- // 3. Tạo một canvas ảo để gộp thủ công
  const mergedCanvas = document.createElement('canvas');
  mergedCanvas.width = threeCanvas.width;
  mergedCanvas.height = threeCanvas.height;
  const ctx = mergedCanvas.getContext('2d');
 
  try {
- // Bước 3.1: Vẽ camera thật làm nền phía dưới
- ctx.drawImage(mindarVideo, 0, 0, mergedCanvas.width, mergedCanvas.height);
+ if (imageCapture) {
+ // Bước 1: Chụp một bức ảnh thực tế từ camera bằng phần cứng (không qua canvas)
+ const imageBitmap = await imageCapture.grabFrame();
+ ctx.drawImage(imageBitmap, 0, 0, mergedCanvas.width, mergedCanvas.height);
+ } else {
+ // Nếu trình duyệt không hỗ trợ ImageCapture, ép vẽ video dạng tối giản chống bộ lọc
+ ctx.drawImage(document.querySelector('video'), 0, 0, mergedCanvas.width, mergedCanvas.height);
+ }
 
- // Bước 3.2: Vẽ đè vật thể 3D lên trên nền camera đó
+ // Bước 2: Vẽ đè vật thể 3D lên
  ctx.drawImage(threeCanvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
 
- // Bước 3.3: Xuất dữ liệu qua Blob để tránh lỗi chuỗi bảo mật trên mobile
+ // Bước 3: Xuất file ảnh
  mergedCanvas.toBlob((blob) => {
- if (!blob) {
- infoDiv.innerText = "Lỗi bảo mật trình duyệt chặn xuất ảnh.";
- return;
- }
  const url = URL.createObjectURL(blob);
  const link = document.createElement('a');
- link.download = 'mindar_snapshot_success.png';
+ link.download = 'webar_hardware_snapshot.png';
  link.href = url;
  link.click();
-
- setTimeout(() => URL.revokeObjectURL(url), 100);
- infoDiv.innerText = "Chụp thành công! Ảnh đã được lưu.";
+ infoDiv.innerText = "Chụp thành công nhờ ImageCapture API!";
  }, 'image/png');
 
  } catch (error) {
  console.error(error);
- infoDiv.innerText = "Thất bại: Trình duyệt của bạn khóa quyền sao chép pixel.";
+ infoDiv.innerText = "Trình duyệt khóa quá chặt. Hãy chuyển sang Phương pháp 2 (Mở tab mới).";
  }
  });
  </script>
