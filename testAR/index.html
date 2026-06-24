@@ -3,24 +3,79 @@
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
- <title>WebAR - Vượt rào khóa quyền Pixel</title>
+ <title>WebAR Hoàn Chỉnh - Giải Pháp Nhấn Giữ Lưu Ảnh</title>
+
  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
  <style>
- body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
- #controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; }
- #snap-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid #007bff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
- #info { position: fixed; top: 10px; width: 100%; text-align: center; color: white; background: rgba(0,0,0,0.7); padding: 8px 0; z-index: 9999; font-size: 13px; }
+ body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background-color: #000; }
+
+ /* Giao diện nút bấm */
+ #controls { 
+ position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+ z-index: 9999; text-align: center; width: 100%; pointer-events: none;
+ }
+ #snap-btn { 
+ width: 75px; height: 75px; border-radius: 50%; background: white; 
+ border: 5px solid #007bff; cursor: pointer; pointer-events: auto;
+ box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+ }
+ #snap-btn:active { background: #ddd; }
+
+ /* Thanh thông báo trạng thái */
+ #info { 
+ position: fixed; top: 10px; width: 100%; text-align: center; 
+ color: white; background: rgba(0,0,0,0.7); padding: 8px 0; 
+ z-index: 9999; font-size: 13px; pointer-events: none;
+ }
+
+ /* Lớp giao diện hiển thị ảnh sau khi chụp để người dùng nhấn giữ */
+ #preview-overlay {
+ display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+ background: rgba(0,0,0,0.9); z-index: 100000; text-align: center;
+ }
+ #preview-img {
+ max-width: 90%; max-height: 75%; margin-top: 5vh; border: 3px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+ }
+ #preview-msg {
+ color: white; margin-top: 15px; font-size: 16px; font-weight: bold; padding: 0 20px;
+ }
+ #close-btn {
+ margin-top: 15px; padding: 10px 25px; background: #ff4757; color: white;
+ border: none; border-radius: 5px; font-size: 14px; cursor: pointer;
+ }
  </style>
  </head>
  <body>
 
- <div id="info">Đang kết nối camera phần cứng... Chạm màn hình để đặt vật thể.</div>
- <div id="controls"><button id="snap-btn"></button></div>
+ <div id="info">Đang khởi tạo camera... Hãy chạm màn hình để đặt vật thể 3D.</div>
 
- <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: true;" embedded renderer="preserveDrawingBuffer: true; alpha: true;">
+ <div id="controls">
+ <button id="snap-btn" title="Chụp ảnh ngay"></button>
+ </div>
+
+ <div id="preview-overlay">
+ <img id="preview-img" src="" alt="AR Snapshot">
+ <div id="preview-msg">Nhấn giữ vào ảnh 2 giây để "Lưu hình ảnh" vào máy</div>
+ <button id="close-btn">Quay lại chụp tiếp</button>
+ </div>
+
+ <a-scene 
+ mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: true;" 
+ embedded 
+ color-space="sRGB" 
+ renderer="preserveDrawingBuffer: true; alpha: true; colorManagement: true;" 
+ vr-mode-ui="enabled: false" 
+ device-orientation-permission-ui="enabled: false">
+
+ <a-entity light="type: ambient; intensity: 0.8;"></a-entity>
+ <a-entity light="type: directional; intensity: 0.6;" position="1 3 2"></a-entity>
+
  <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
+
  <a-entity id="ar-objects-container"></a-entity>
+
  </a-scene>
 
  <script>
@@ -28,77 +83,103 @@
  const snapBtn = document.getElementById('snap-btn');
  const objectsContainer = document.getElementById('ar-objects-container');
  const sceneEl = document.querySelector('a-scene');
- let imageCapture = null;
 
- // Lấy luồng camera trực tiếp từ phần cứng để chuẩn bị chụp gốc
+ // Các thành phần của màn hình Preview ảnh
+ const previewOverlay = document.getElementById('preview-overlay');
+ const previewImg = document.getElementById('preview-img');
+ const closeBtn = document.getElementById('close-btn');
+
  sceneEl.addEventListener("arReady", () => {
- infoDiv.innerText = "Hệ thống sẵn sàng! Chạm để đặt vật thể.";
- const videoTrack = document.querySelector('video').srcObject.getVideoTracks()[0];
- // Kích hoạt API ImageCapture trực tiếp từ phần cứng camera
- if (window.ImageCapture) {
- imageCapture = new ImageCapture(videoTrack);
- }
+ infoDiv.innerText = "Sẵn sàng! Chạm màn hình để đặt quả cầu cố định ngoài không gian.";
  });
 
- // Đặt vật thể đứng im theo con quay hồi chuyển
- window.addEventListener('click', (e) => {
- if (e.target === snapBtn) return;
+ // 1. TÍNH NĂNG ĐẶT VẬT THỂ: Tính toán hướng camera phóng ra để đặt vật thể đứng im ngoài đời
+ window.addEventListener('click', (event) => {
+ // Nếu bấm trúng các nút bấm thì bỏ qua không đặt vật thể
+ if (event.target === snapBtn || event.target === closeBtn || previewOverlay.style.display === 'block') return;
+
  const cameraEl = document.querySelector('a-camera');
- const rotation = cameraEl.getAttribute('rotation');
- const position = cameraEl.getAttribute('position');
+ const cameraRotation = cameraEl.getAttribute('rotation');
+ const cameraPosition = cameraEl.getAttribute('position');
 
- const angleY = (rotation.y * Math.PI) / 180;
- const angleX = (rotation.x * Math.PI) / 180;
- const distance = 2;
+ const angleY = (cameraRotation.y * Math.PI) / 180;
+ const angleX = (cameraRotation.x * Math.PI) / 180;
+ const distance = 2.5; // Khoảng cách đặt vật thể trước mặt (2.5m)
 
- const targetX = position.x - Math.sin(angleY) * Math.cos(angleX) * distance;
- const targetZ = position.z - Math.cos(angleY) * Math.cos(angleX) * distance;
- const targetY = position.y + Math.sin(angleX) * distance;
+ // Tính toán tọa độ XYZ thực tế
+ const targetX = cameraPosition.x - Math.sin(angleY) * Math.cos(angleX) * distance;
+ const targetZ = cameraPosition.z - Math.cos(angleY) * Math.cos(angleX) * distance;
+ const targetY = cameraPosition.y + Math.sin(angleX) * distance;
 
+ // Tạo vật thể hình cầu đại diện cho Pokemon
  const sphere = document.createElement('a-sphere');
  sphere.setAttribute('position', `${targetX} ${targetY} ${targetZ}`);
- sphere.setAttribute('radius', '0.15');
- sphere.setAttribute('color', '#' + Math.floor(Math.random()*16777215).toString(16));
+ sphere.setAttribute('radius', '0.2');
+
+ // Đổi màu ngẫu nhiên để phân biệt khi đặt nhiều khối
+ const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+ sphere.setAttribute('color', randomColor);
+
+ // Đưa vào không gian AR
  objectsContainer.appendChild(sphere);
+ infoDiv.innerText = "Đã đặt vật thể! Hãy di chuyển điện thoại để thấy nó đứng im.";
  });
 
- // CHỤP ẢNH PHẦN CỨNG (Sửa triệt để lỗi khóa quyền pixel)
- snapBtn.addEventListener('click', async () => {
- infoDiv.innerText = "Đang chụp từ phần cứng camera...";
- const threeCanvas = sceneEl.renderer.domElement;
+ // 2. TÍNH NĂNG CHỤP ẢNH: Tránh bộ lọc bảo mật bằng phương pháp Image Overlay
+ snapBtn.addEventListener('click', () => {
+ infoDiv.innerText = "Đang gộp hình ảnh...";
 
+ // Lấy canvas hiển thị vật thể 3D của A-Frame
+ const threeCanvas = sceneEl.renderer.domElement;
+ // Tìm thẻ video camera thật đang chạy ẩn của MindAR
+ const mindarVideo = document.querySelector('video');
+
+ if (!mindarVideo) {
+ infoDiv.innerText = "Lỗi: Không tìm thấy luồng camera nền.";
+ return;
+ }
+
+ // Tạo canvas ảo để xử lý gộp pixel dưới tầng đồ họa
  const mergedCanvas = document.createElement('canvas');
  mergedCanvas.width = threeCanvas.width;
  mergedCanvas.height = threeCanvas.height;
  const ctx = mergedCanvas.getContext('2d');
 
  try {
- if (imageCapture) {
- // Bước 1: Chụp một bức ảnh thực tế từ camera bằng phần cứng (không qua canvas)
- const imageBitmap = await imageCapture.grabFrame();
- ctx.drawImage(imageBitmap, 0, 0, mergedCanvas.width, mergedCanvas.height);
- } else {
- // Nếu trình duyệt không hỗ trợ ImageCapture, ép vẽ video dạng tối giản chống bộ lọc
- ctx.drawImage(document.querySelector('video'), 0, 0, mergedCanvas.width, mergedCanvas.height);
- }
+ // Bước 2.1: Chụp và dán hình ảnh từ camera thực tế vào canvas ảo làm nền
+ ctx.drawImage(mindarVideo, 0, 0, mergedCanvas.width, mergedCanvas.height);
 
- // Bước 2: Vẽ đè vật thể 3D lên
+ // Bước 2.2: Dán đè các vật thể 3D đang hiển thị lên trên nền camera đó
  ctx.drawImage(threeCanvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
 
- // Bước 3: Xuất file ảnh
+ // Bước 2.3: Xuất sang dạng đường dẫn ảo (Object URL) an toàn
  mergedCanvas.toBlob((blob) => {
+ if (!blob) {
+ infoDiv.innerText = "Không thể xuất ảnh do trình duyệt chặn quyền quá chặt.";
+ return;
+ }
  const url = URL.createObjectURL(blob);
- const link = document.createElement('a');
- link.download = 'webar_hardware_snapshot.png';
- link.href = url;
- link.click();
- infoDiv.innerText = "Chụp thành công nhờ ImageCapture API!";
+
+ // Đưa đường dẫn ảnh vào thẻ IMG và hiển thị màn hình đè lên
+ previewImg.src = url;
+ previewOverlay.style.display = 'block';
+ infoDiv.innerText = "Đã chụp thành công!";
  }, 'image/png');
 
  } catch (error) {
  console.error(error);
- infoDiv.innerText = "Trình duyệt khóa quá chặt. Hãy chuyển sang Phương pháp 2 (Mở tab mới).";
+ infoDiv.innerText = "Thất bại: Thiết bị khóa quyền truy cập pixel đồ họa.";
  }
+ });
+
+ // Nút tắt màn hình xem trước để quay lại giao diện AR chụp tiếp
+ closeBtn.addEventListener('click', () => {
+ // Giải phóng bộ nhớ đường dẫn ảnh cũ để tránh làm nặng RAM điện thoại
+ if (previewImg.src) {
+ URL.revokeObjectURL(previewImg.src);
+ }
+ previewOverlay.style.display = 'none';
+ infoDiv.innerText = "Đã quay lại chế độ AR.";
  });
  </script>
  </body>
